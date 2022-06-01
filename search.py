@@ -18,8 +18,9 @@ class Search(object):
 
         store = NIOFSDirectory(Paths.get(storeDir))
 
-        reader = DirectoryReader.open(store)
-        searcher = IndexSearcher(reader)
+        self.reader = DirectoryReader.open(store)
+        self.searcher = IndexSearcher(self.reader)
+        self.query = query
         # print(searcher.getSimilarity() )
         # searcher.setSimilarity(ClassicSimilarity())
         # print(searcher.getSimilarity() )
@@ -29,24 +30,27 @@ class Search(object):
         # bm25 = BM25Similarity(1.9, 0.6)
         # searcher.setSimilarity(bm25)
         # print(searcher.getSimilarity())
-        self.search(searcher, query)
 
 
-    def search(self, searcher, query):
+    def search(self):
         analyzer = StandardAnalyzer()
         #analyzer = EnglishAnalyzer()
-        query = QueryParser("Context", analyzer).parse(query)
+        query = QueryParser("Context", analyzer).parse(self.query)
         MAX = 10
-        hits = searcher.search(query, MAX)
+        hits = self.searcher.search(self.query, MAX)
         print(hits.totalHits)
         for hit in hits.scoreDocs:
             print("----------------------")
             print("Score :", hit.score)
-            doc = searcher.doc(hit.doc)
+            doc = self.searcher.doc(hit.doc)
             print(" Title :", doc.get("Title"))
             print(" ID :", doc.get("ID"))
             print(" Text :", doc.get("Context"))
             print("----------------------")
+        return hits.scoreDocs
+
+    def searchDoc(self, hit):
+        return self.searcher.doc(hit.doc)
 
 
 if __name__ == '__main__':
