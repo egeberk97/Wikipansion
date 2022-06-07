@@ -38,7 +38,7 @@ class MyApp:
 
         self.Output = Text(self.myContainer3, height=50,
                       width=250,
-                      bg="light cyan")
+                      bg="white")
 
         self.Output.pack(side=BOTTOM)
         self.Output.delete("1.0", "end-1c")
