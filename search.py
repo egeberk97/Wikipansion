@@ -21,6 +21,8 @@ class Search(object):
         self.reader = DirectoryReader.open(store)
         self.searcher = IndexSearcher(self.reader)
         self.query = query
+        #print(self.query)
+        #self.search_fun()
         # print(searcher.getSimilarity() )
         # searcher.setSimilarity(ClassicSimilarity())
         # print(searcher.getSimilarity() )
@@ -32,12 +34,12 @@ class Search(object):
         # print(searcher.getSimilarity())
 
 
-    def search(self):
+    def search_fun(self):
         analyzer = StandardAnalyzer()
         #analyzer = EnglishAnalyzer()
         query = QueryParser("Context", analyzer).parse(self.query)
         MAX = 10
-        hits = self.searcher.search(self.query, MAX)
+        hits = self.searcher.search(query, MAX)
         print(hits.totalHits)
         for hit in hits.scoreDocs:
             print("----------------------")
@@ -52,15 +54,24 @@ class Search(object):
     def searchDoc(self, hit):
         return self.searcher.doc(hit.doc)
 
+    def searchModule(self):
+        analyzer = StandardAnalyzer()
+        # analyzer = EnglishAnalyzer()
+        query = QueryParser("Context", analyzer).parse(self.query)
+        MAX = 5
+        hits = self.searcher.search(query, MAX)
+        return hits.scoreDocs
+
 
 if __name__ == '__main__':
     storeDir = "index"
 
     lucene.initVM(vmargs=['-Djava.awt.headless=true'])
     start = datetime.now()
-    query = "Anarchy"
+    query = "frisbee"
     try:
         search = Search(query)
+        search.search_fun()
         end = datetime.now()
         print(end - start)
     except Exception as e:

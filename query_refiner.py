@@ -14,12 +14,18 @@ class SpellCorrector(object):
     def __init__(self, query):
         self.query = query
         self.correct_words = words.words()
+        self.correct_words.append("frisbee")
         self.corrected = self.correction(query)
 
 
     def correction(self, query):
-        temp = [(edit_distance(query, w), w) for w in self.correct_words if w[0] == query[0]] #calculating edit distnce with every words
-        return sorted(temp, key=lambda val: val[0])[0][1] #getting the most similar one
+        query_new = ""
+        for s in query.split():
+            temp = [(edit_distance(s, w), w) for w in self.correct_words if w[0] == s[0]] #calculating edit distnce with every words
+            new_word = sorted(temp, key=lambda val: val[0])[0][1] #getting the most similar one
+            query_new = query_new + new_word + " "
+        return query_new.strip()
+
 
     def get_correction(self):
         return self.corrected
