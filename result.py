@@ -1,7 +1,7 @@
-import  lucene
-import  os, lucene, threading, time, csv
+import lucene
+import os, threading, time, csv
 from datetime import datetime
-
+from sklearn.metrics import ndcg_score
 from java.nio.file import Paths
 
 from org.apache.lucene.analysis.standard import StandardAnalyzer
@@ -10,9 +10,6 @@ from org.apache.lucene.index import IndexReader, DirectoryReader
 from org.apache.lucene.queryparser.classic import QueryParser
 from org.apache.lucene.store import NIOFSDirectory
 from org.apache.lucene.search.similarities import (ClassicSimilarity, BM25Similarity)
-import subprocess
-import sys
-
 
 from tqdm import tqdm
 
@@ -59,37 +56,41 @@ class Results(object):
 
         with open(queries_path) as tsvfile:
             reader = csv.reader(tsvfile, delimiter='\t')
-            c = 0
-            for row in reader:
-                if c < 4:
-                    c += 1
-                    doc_id, title, text = row
-                    #
-                    # text_tokens = word_tokenize(text)
-                    #
-                    # tokens_without_sw = [word for word in text_tokens if not word in stopwords.words()]
-                    # text = (" ").join(tokens_without_sw)
 
-                    relevancy_dict = relevant_set[doc_id]
-                    retrieved10 = self.search(searcher, title)
-                    counter = 0
-                    rel_count = 0
-                    for k,v in relevancy_dict.items():
-                        if k in retrieved10:
-                            counter += 1
-                            rel_count += int(v)
-                    print("Retrieved Relevant document number : ", counter)
-                    print("Sum of Relevancy document number : ", rel_count)
-                    print("Total Relevant document number : ", len(relevancy_dict))
-                else:
-                    break
+            precisions = []
+            for row in tqdm(reader):
+                try:
+                    prec = self.average_precision(row, relevant_set, searcher)
+                    precisions.append(prec)
+                except:
+                    pass
+            print("MAP : ")
+            print(sum(precisions)/len(precisions))
+        return
+
+
+    def average_precision(self, row, relevant_set, searcher):
+
+        doc_id, title, text = row
+
+        relevancy_dict = relevant_set[doc_id]
+        retrieved10 = self.search(searcher, title)
+        precision_counter = 0
+        precisions = []
+        for c, d in enumerate(retrieved10):
+            if d in relevancy_dict:
+                precision_counter += 1
+                precisions.append(precision_counter/(c+1))
+        if len(precisions) != 0:
+            return sum(precisions)/len(precisions)
+        else:
+            return 0
 
 
     def search(self, searcher, query):
         analyzer = StandardAnalyzer()
         #analyzer = EnglishAnalyzer()
         query = QueryParser("Context", analyzer).parse(query)
-        print(query)
         MAX = 10
         hits = searcher.search(query, MAX)
         result_list = []
