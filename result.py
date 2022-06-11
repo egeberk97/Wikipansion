@@ -14,6 +14,7 @@ from org.apache.lucene.store import NIOFSDirectory
 from org.apache.lucene.search.similarities import (ClassicSimilarity, BM25Similarity)
 
 from tqdm import tqdm
+from synonym import Synonym
 
 
 class Results(object):
@@ -31,14 +32,19 @@ class Results(object):
         # for query in queries:
         #     self.search(searcher, query)
         #
-        bm25 = BM25Similarity(1.9, 0.5)
-        searcher.setSimilarity(bm25)
-        print(searcher.getSimilarity())
-
+        # bm25 = BM25Similarity(1.9, 0.5)
+        # searcher.setSimilarity(bm25)
+        # print(searcher.getSimilarity())
+        self.expansion_model = Synonym("wordnet")
         self.query_rel(rel_path, queries_path, searcher)
 
         # for query in queries:
         #     self.search(searcher, query)
+
+    def get_synonym(self, query):
+        synonyms = self.expansion_model.synonym_antonym_extractor(query)
+        return synonyms
+
 
     def query_rel(self,rel_path,queries_path, searcher):
         print("Relevancy value dict started.")
@@ -61,17 +67,25 @@ class Results(object):
 
             precisions = []
             ndcgs = []
+            c=0
             for row in tqdm(reader):
-                try:
-                    doc_id, title, text = row
-                    relevancy_dict = relevant_set[doc_id]
-                    retrieved10 = self.search(searcher, str(title).lower())
-                    prec = self.average_precision(relevancy_dict, retrieved10)
-                    precisions.append(prec)
-                    ndcg = self.ndcg10(relevancy_dict, retrieved10)
-                    ndcgs.append(ndcg)
-                except:
-                    pass
+                if c<200:
+                    c+=1
+                    try:
+                        doc_id, title, text = row
+                        relevancy_dict = relevant_set[doc_id]
+                        #expand = self.get_synonym(str(title).lower())
+                        #query = str(title).lower() + " " + "".join([i+" " for i in expand])
+                        query = str(title).lower()
+                        retrieved10 = self.search(searcher, query)
+                        prec = self.average_precision(relevancy_dict, retrieved10)
+                        precisions.append(prec)
+                        ndcg = self.ndcg10(relevancy_dict, retrieved10)
+                        ndcgs.append(ndcg)
+                    except:
+                        pass
+                else:
+                    break
             print("MAP : ", (sum(precisions)/len(precisions)))
             print()
 

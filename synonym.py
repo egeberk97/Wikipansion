@@ -96,6 +96,6 @@ class Synonym():
                     if sim > 0.7 and lemma.name().lower() != phrase and lemma.name() not in synonyms:
                         #best_synonym = lemma.name()
                         #max_sim = sim
-                        synonyms.append(lemma.name().replace("_"," "))
+                        synonyms.append(query.replace(phrase, lemma.name()))
                     #synonyms.append(lemma.name())
         return synonyms
