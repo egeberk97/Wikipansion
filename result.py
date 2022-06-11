@@ -1,6 +1,8 @@
 import lucene
 import os, threading, time, csv
 from datetime import datetime
+
+import numpy as np
 from sklearn.metrics import ndcg_score
 from java.nio.file import Paths
 
@@ -58,23 +60,49 @@ class Results(object):
             reader = csv.reader(tsvfile, delimiter='\t')
 
             precisions = []
+            ndcgs = []
             for row in tqdm(reader):
                 try:
-                    prec = self.average_precision(row, relevant_set, searcher)
+                    doc_id, title, text = row
+                    relevancy_dict = relevant_set[doc_id]
+                    retrieved10 = self.search(searcher, title)
+                    prec = self.average_precision(relevancy_dict, retrieved10)
                     precisions.append(prec)
+                    ndcg = self.ndcg10(relevancy_dict, retrieved10)
+                    ndcgs.append(ndcg)
                 except:
                     pass
-            print("MAP : ")
-            print(sum(precisions)/len(precisions))
+            print("MAP : ", (sum(precisions)/len(precisions)))
+            print()
+
+            print("NDCG@10 : ", (sum(ndcgs)/len(ndcgs)))
+
         return
 
+    def ndcg10(self, relevancy_dict, retrieved10):
 
-    def average_precision(self, row, relevant_set, searcher):
 
-        doc_id, title, text = row
+        dcg10 = 0
+        maxdcg = 0
 
-        relevancy_dict = relevant_set[doc_id]
-        retrieved10 = self.search(searcher, title)
+        for c, d in enumerate(retrieved10):
+            if d in relevancy_dict:
+                if c == 0:
+                    dcg10 += int(relevancy_dict[d])
+                else:
+                    dcg10 += int(relevancy_dict[d])/np.log2(c+1)
+        c=0
+        for k,v in relevancy_dict.items():
+            if c == 0:
+                maxdcg += int(v)
+            else:
+                maxdcg += int(v) / np.log2(c + 1)
+            c+=1
+
+        return (dcg10/maxdcg)
+
+    def average_precision(self, relevancy_dict, retrieved10):
+
         precision_counter = 0
         precisions = []
         for c, d in enumerate(retrieved10):
