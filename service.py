@@ -2,6 +2,7 @@ from tkinter import *
 from search import Search
 from query_refiner import SpellCorrector
 import lucene
+from synonym import Synonym
 
 class MyApp:
     def __init__(self, parent):
@@ -38,10 +39,12 @@ class MyApp:
 
         self.Output = Text(self.myContainer3, height=50,
                       width=250,
+                      foreground= "black",
                       bg="white")
 
         self.Output.pack(side=BOTTOM)
         self.Output.delete("1.0", "end-1c")
+        self.expansion_model = Synonym("wordnet")
 
 
     def wikipansion(self, query):
@@ -54,11 +57,24 @@ class MyApp:
 
         #self.myParent.destroy()
 
+
+    def get_synonym(self, query):
+        synonyms = self.expansion_model.synonym_antonym_extractor(query)
+        print("possible synonyms:", synonyms)
+        return synonyms
+
+
     def searchEngine(self, query):
 
+        self.Output.delete('1.0', END)
         corrected_query = self.wikipansion(query)
         search = Search(corrected_query)
         self.Output.insert(END, "The search results are showing for : "+ str(corrected_query))
+
+        expand = self.get_synonym(query)
+        self.Output.insert(END, "\n")
+        self.Output.insert(END, "Possible expansions : " + str(expand))
+
         self.Output.insert(END, "\n")
         self.Output.insert(END, "\n")
         hits = search.searchModule()
