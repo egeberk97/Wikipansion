@@ -89,13 +89,13 @@ class Synonym():
             for candidates in wordnet.synsets(phrase):
                 for lemma in candidates.lemmas():
                     print(lemma.name())
-                    v1 = self.get_embedding(query, phrase) #buraya sadece query gelecek
-                    v2 = self.get_embedding(lemma.name(), phrase) # buraya sadece synonym gelecek
+                    v1 = self.get_embedding(phrase, query) #buraya sadece query gelecek
+                    v2 = self.get_embedding(lemma.name(), lemma.name()) # buraya sadece synonym gelecek
                     sim = self.get_cosine(v1, v2)
                     print(sim)
-                    if sim > 0.95 and lemma.name().lower() != phrase:
+                    if sim > 0.7 and lemma.name().lower() != phrase:
                         #best_synonym = lemma.name()
                         #max_sim = sim
-                        synonyms.append(lemma.name())
+                        synonyms.append(lemma.name().replace("-"," "))
                     #synonyms.append(lemma.name())
         return synonyms
