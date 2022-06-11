@@ -68,15 +68,17 @@ class MyApp:
 
         self.Output.delete('1.0', END)
         corrected_query = self.wikipansion(query)
-        search = Search(corrected_query)
+
         self.Output.insert(END, "The search results are showing for : "+ str(corrected_query))
 
-        expand = self.get_synonym(query)
+        expand = self.get_synonym(corrected_query)
         self.Output.insert(END, "\n")
-        self.Output.insert(END, "Possible expansions : " + str(expand))
+        self.Output.insert(END, "The query expansions : " + "".join([i+", " for i in expand]))
 
         self.Output.insert(END, "\n")
         self.Output.insert(END, "\n")
+        search = Search(corrected_query + " " + "".join([i+" " for i in expand]))
+
         hits = search.searchModule()
         print(str(len(hits))+ " documents have been retrieved.")
         for hit in hits:

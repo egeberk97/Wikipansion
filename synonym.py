@@ -3,6 +3,8 @@ from nltk.corpus import wordnet
 from transformers import BertTokenizer, BertModel, BertForMaskedLM
 from transformers import AutoTokenizer
 from scipy.spatial.distance import cosine
+import nltk
+nltk.download('wordnet')
 
 class Synonym():
 
@@ -79,15 +81,21 @@ class Synonym():
     def get_cosine(self, v1, v2):
         return 1 - cosine(v1, v2)
 
-    def synonym_antonym_extractor(self, phrase):
+    def synonym_antonym_extractor(self, query):
         synonyms = []
         max_sim = 0
         best_synonym = ""
-        for candidates in wordnet.synsets(phrase):
-            for lemma in candidates.lemmas():
-                v1 = self.get_embedding(phrase, phrase)
-                v2 = self.get_embedding(phrase, phrase)
-                if self.get_cosine(v1, v2) > max_sim and lemma.name().lower() != phrase:
-                   best_synonym = lemma.name()
-                #synonyms.append(lemma.name())
-        return best_synonym
+        for phrase in query.split():
+            for candidates in wordnet.synsets(phrase):
+                for lemma in candidates.lemmas():
+                    print(lemma.name())
+                    v1 = self.get_embedding(query, phrase) #buraya sadece query gelecek
+                    v2 = self.get_embedding(lemma.name(), phrase) # buraya sadece synonym gelecek
+                    sim = self.get_cosine(v1, v2)
+                    print(sim)
+                    if sim > 0.95 and lemma.name().lower() != phrase:
+                        #best_synonym = lemma.name()
+                        #max_sim = sim
+                        synonyms.append(lemma.name())
+                    #synonyms.append(lemma.name())
+        return synonyms
