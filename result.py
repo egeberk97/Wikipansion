@@ -31,9 +31,9 @@ class Results(object):
         # for query in queries:
         #     self.search(searcher, query)
         #
-        # bm25 = BM25Similarity(1.9, 0.6)
-        # searcher.setSimilarity(bm25)
-        # print(searcher.getSimilarity())
+        bm25 = BM25Similarity(1.9, 0.5)
+        searcher.setSimilarity(bm25)
+        print(searcher.getSimilarity())
 
         self.query_rel(rel_path, queries_path, searcher)
 
@@ -65,7 +65,7 @@ class Results(object):
                 try:
                     doc_id, title, text = row
                     relevancy_dict = relevant_set[doc_id]
-                    retrieved10 = self.search(searcher, title)
+                    retrieved10 = self.search(searcher, str(title).lower())
                     prec = self.average_precision(relevancy_dict, retrieved10)
                     precisions.append(prec)
                     ndcg = self.ndcg10(relevancy_dict, retrieved10)
