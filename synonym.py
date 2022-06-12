@@ -81,21 +81,39 @@ class Synonym():
     def get_cosine(self, v1, v2):
         return 1 - cosine(v1, v2)
 
+    def sort_and_get_3(self, lst, syn):
+        if lst[-1][1]< syn[1]:
+            lst[-1] = syn
+            lst = sorted(lst, key = lambda x : x[1], reverse = True)
+        return lst
+
+    def flatten(self, lst):
+        return [x for xs in lst for x in xs]
+
     def synonym_antonym_extractor(self, query):
         synonyms = []
         max_sim = 0
         best_synonym = ""
         for phrase in query.split():
-            for candidates in wordnet.synsets(phrase):
-                for lemma in candidates.lemmas():
-                    #print(lemma.name())
-                    v1 = self.get_embedding(query, phrase)
-                    v2 = self.get_embedding(query.replace(phrase, lemma.name()), lemma.name())
-                    sim = self.get_cosine(v1, v2)
-                    #print(sim)
-                    if sim > 0.7 and lemma.name().lower() != phrase and lemma.name() not in synonyms:
-                        #best_synonym = lemma.name()
-                        #max_sim = sim
-                        synonyms.append(query.replace(phrase, lemma.name()))
-                    #synonyms.append(lemma.name())
+            lst = []
+            candidates_list = set(self.flatten([[lemma.name().lower() for lemma in candidates.lemmas()] for candidates in (wordnet.synsets(phrase))]))
+            for lemma in candidates_list:
+
+                #print(lemma.name())
+                v1 = self.get_embedding(query, phrase)
+                v2 = self.get_embedding(query.replace(phrase, lemma), lemma)
+                sim = self.get_cosine(v1, v2)
+                #print((lemma,sim))
+                #print(sim)
+                if sim > 0.75 and lemma != phrase:
+                    #best_synonym = lemma.name()
+                    #max_sim = sim
+                    if len(lst)<3:
+                        lst.append((query.replace(phrase, lemma), sim))
+                        lst = sorted(lst, key = lambda x : x[1], reverse = True)
+                    else:
+                        lst = self.sort_and_get_3(lst, (query.replace(phrase, lemma), sim))
+
+            synonyms.extend([i[0] for i in lst])
+                #synonyms.append(lemma.name())
         return synonyms

@@ -69,14 +69,14 @@ class Results(object):
             ndcgs = []
             c=0
             for row in tqdm(reader):
-                if c<200:
+                if c<10000:
                     c+=1
                     try:
                         doc_id, title, text = row
                         relevancy_dict = relevant_set[doc_id]
-                        #expand = self.get_synonym(str(title).lower())
-                        #query = str(title).lower() + " " + "".join([i+" " for i in expand])
-                        query = str(title).lower()
+                        expand = self.get_synonym(str(title).lower())
+                        query = str(title).lower() + " " + "".join([i+" " for i in expand])
+                        #query = str(title).lower()
                         retrieved10 = self.search(searcher, query)
                         prec = self.average_precision(relevancy_dict, retrieved10)
                         precisions.append(prec)
