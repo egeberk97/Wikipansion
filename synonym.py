@@ -4,7 +4,8 @@ from transformers import BertTokenizer, BertModel, BertForMaskedLM
 from transformers import AutoTokenizer
 from scipy.spatial.distance import cosine
 import nltk
-
+nltk.download('punkt')
+nltk.download('averaged_perceptron_tagger')
 import requests
 from bs4 import BeautifulSoup
 

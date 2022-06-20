@@ -1,6 +1,7 @@
 import lucene
 import os, threading, time, csv
 from datetime import datetime
+import re
 
 import numpy as np
 from sklearn.metrics import ndcg_score
@@ -75,7 +76,9 @@ class Results(object):
                     try:
                         doc_id, title, text = row
                         relevancy_dict = relevant_set[doc_id]
-                        expand = self.get_synonym(str(title).lower())
+                        que = str(title).lower()
+
+                        expand = self.get_synonym(re.sub(r'[^\w\s]', '', que))
                         query = str(title).lower() + " " + "".join([i+" " for i in expand])
                         #query = str(title).lower()
                         retrieved10 = self.search(searcher, query)
@@ -85,6 +88,7 @@ class Results(object):
                         ndcgs.append(ndcg)
                     except:
                         exception_count += 1
+                        print(doc_id)
                         pass
                 else:
                     break
