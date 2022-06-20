@@ -4,7 +4,9 @@ from transformers import BertTokenizer, BertModel, BertForMaskedLM
 from transformers import AutoTokenizer
 from scipy.spatial.distance import cosine
 import nltk
-nltk.download('wordnet')
+
+import requests
+from bs4 import BeautifulSoup
 
 class Synonym():
 
@@ -15,6 +17,11 @@ class Synonym():
         #self.bert_model = BertForMaskedLM.from_pretrained("bert-base-uncased", output_hidden_states = True)
         self.bert_auto_tokenizer = AutoTokenizer.from_pretrained("bert-base-uncased")
 
+    def get_source(self):
+        return self.source
+
+    def set_source(self, source):
+        self.source = source
 
     def bert_text_preparation(self, text):
         marked_text = "[CLS] " + text + " [SEP]"
@@ -37,6 +44,13 @@ class Synonym():
 
         return token_embeddings
 
+    def embed_last_layer(self, token_embeddings):
+        token_vecs_sum = []
+        for token in token_embeddings:
+            sum_vec = token[-1]
+            token_vecs_sum.append(sum_vec)
+
+        return token_vecs_sum
 
     def embed_with_sum(self, token_embeddings):
         token_vecs_sum = []
@@ -81,6 +95,17 @@ class Synonym():
     def get_cosine(self, v1, v2):
         return 1 - cosine(v1, v2)
 
+    def get_pos_tag(self, query):
+        tokenized = nltk.word_tokenize(query)
+        list_pos = nltk.pos_tag(tokenized)
+        return zip(*list_pos)
+
+    def get_synonym_from_thesaurus(self, term):
+        response = requests.get('https://www.thesaurus.com/browse/{}'.format(term))
+        soup = BeautifulSoup(response.text, "html.parser")
+        soup.find('section', {'class': 'css-191l5o0-ClassicContentCard e1qo4u830'})
+        return [span.text for span in soup.findAll('a', {'class': 'css-1kg1yv8 eh475bn0'})]
+
     def sort_and_get_3(self, lst, syn):
         if lst[-1][1]< syn[1]:
             lst[-1] = syn
@@ -94,9 +119,23 @@ class Synonym():
         synonyms = []
         max_sim = 0
         best_synonym = ""
+        pos_filter = "NN"
+        word, pos_tag = self.get_pos_tag(query)
         for phrase in query.split():
             lst = []
-            candidates_list = set(self.flatten([[lemma.name().lower() for lemma in candidates.lemmas()] for candidates in (wordnet.synsets(phrase))]))
+            if pos_tag[word.index(phrase)] not in pos_filter:
+                #print(phrase, " is filtered - pos tag ", pos_tag[word.index(phrase)])
+                continue
+            if self.source == "wordnet":
+                candidates_list = set(self.flatten([[lemma.name().lower() for lemma in candidates.lemmas()] for candidates in (wordnet.synsets(phrase))]))
+            elif self.source == "thesaurus":
+                candidates_list = set(self.get_synonym_from_thesaurus(phrase))
+                print(candidates_list)
+                candidates_list = [x.strip() for x in candidates_list if len(x.strip().split(" ")) == 1]
+                print(candidates_list)
+            else:
+                print("synonym source is invalid")
+
             for lemma in candidates_list:
 
                 #print(lemma.name())

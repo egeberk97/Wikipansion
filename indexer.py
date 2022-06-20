@@ -1,4 +1,5 @@
-import  os, lucene, threading, time, csv
+import os, threading, time, csv
+import lucene
 from lucene import *
 from datetime import datetime
 import subprocess
@@ -63,7 +64,7 @@ class Indexer(object):
         contextType.setIndexOptions(IndexOptions.DOCS_AND_FREQS)
 
         # adding corpus
-        with open(corpusPath) as tsvfile:
+        with open(corpusPath, encoding='utf-8') as tsvfile:
             reader = csv.reader(tsvfile, delimiter='\t')
             for row in tqdm(reader):
                     doc_id, title, text = row

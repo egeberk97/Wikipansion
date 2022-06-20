@@ -62,15 +62,16 @@ class Results(object):
                 prev_que = que
         print("Relevancy value dict ended.")
 
-        with open(queries_path) as tsvfile:
+        with open(queries_path, encoding="utf-8") as tsvfile:
             reader = csv.reader(tsvfile, delimiter='\t')
 
             precisions = []
             ndcgs = []
             c=0
+            exception_count = 0
             for row in tqdm(reader):
-                if c<10000:
-                    c+=1
+                if c < 100:
+                    c += 1
                     try:
                         doc_id, title, text = row
                         relevancy_dict = relevant_set[doc_id]
@@ -83,9 +84,11 @@ class Results(object):
                         ndcg = self.ndcg10(relevancy_dict, retrieved10)
                         ndcgs.append(ndcg)
                     except:
+                        exception_count += 1
                         pass
                 else:
                     break
+            print("exception count: ", exception_count)
             print("MAP : ", (sum(precisions)/len(precisions)))
             print()
 
@@ -147,7 +150,8 @@ if __name__ == '__main__':
 
     lucene.initVM(vmargs=['-Djava.awt.headless=true'])
     start = datetime.now()
-    queries_path = "english/wiki_en.queries"
+    #queries_path = "english/wiki_en.queries"
+    queries_path = "sampled_wiki.queries"
     rel_path = "simple_english/en2simple.rel"
     try:
         result = Results(rel_path, queries_path)
