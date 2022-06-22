@@ -36,7 +36,7 @@ class Results(object):
         # bm25 = BM25Similarity(1.9, 0.5)
         # searcher.setSimilarity(bm25)
         # print(searcher.getSimilarity())
-        self.expansion_model = Synonym("wordnet")
+        #self.expansion_model = Synonym("wordnet")
         self.query_rel(rel_path, queries_path, searcher)
 
         # for query in queries:
@@ -71,16 +71,17 @@ class Results(object):
             c=0
             exception_count = 0
             for row in tqdm(reader):
-                if c < 100:
+                if c < 1000:
                     c += 1
                     try:
                         doc_id, title, text = row
                         relevancy_dict = relevant_set[doc_id]
                         que = str(title).lower()
 
-                        expand = self.get_synonym(re.sub(r'[^\w\s]', '', que))
-                        query = str(title).lower() + " " + "".join([i+" " for i in expand])
-                        #query = str(title).lower()
+                        #expand = self.get_synonym(re.sub(r'[^\w\s]', '', que))
+                        #query = str(title).lower() + " " + "".join([i+" " for i in expand])
+                        query = str(title).lower()
+
                         retrieved10 = self.search(searcher, query)
                         prec = self.average_precision(relevancy_dict, retrieved10)
                         precisions.append(prec)

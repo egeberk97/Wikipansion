@@ -4,10 +4,11 @@ from transformers import BertTokenizer, BertModel, BertForMaskedLM
 from transformers import AutoTokenizer
 from scipy.spatial.distance import cosine
 import nltk
-nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger')
+
+
 import requests
 from bs4 import BeautifulSoup
+
 
 class Synonym():
 
@@ -79,6 +80,8 @@ class Synonym():
         return desired_output
 
     def get_embedding(self, text, target):
+        #print("context: ", text, "target: ", target)
+        #target = target.strip()
         tokenized_text, tokens_sensor, segments_sensor = self.bert_text_preparation(text)
         subwords = self.get_subword_info(self.bert_auto_tokenizer(text))
         index = text.split(" ").index(target) + 1
@@ -116,6 +119,13 @@ class Synonym():
     def flatten(self, lst):
         return [x for xs in lst for x in xs]
 
+    def get_synonym_from_thesaurus(self, term):
+        response = requests.get('https://www.thesaurus.com/browse/{}'.format(term))
+        soup = BeautifulSoup(response.text, 'html.parser')
+        soup.find('section', {'class': 'css-191l5o0-ClassicContentCard e1qo4u830'})
+        return [span.text for span in soup.findAll('a', {'class': 'css-1kg1yv8 eh475bn0'})]
+    
+
     def synonym_antonym_extractor(self, query):
         synonyms = []
         max_sim = 0
@@ -127,15 +137,16 @@ class Synonym():
             if pos_tag[word.index(phrase)] not in pos_filter:
                 #print(phrase, " is filtered - pos tag ", pos_tag[word.index(phrase)])
                 continue
-            if self.source == "wordnet":
+            if self.source.lower() == "wordnet":
                 candidates_list = set(self.flatten([[lemma.name().lower() for lemma in candidates.lemmas()] for candidates in (wordnet.synsets(phrase))]))
-            elif self.source == "thesaurus":
+            elif self.source.lower() == "thesaurus":
                 candidates_list = set(self.get_synonym_from_thesaurus(phrase))
                 print(candidates_list)
                 candidates_list = [x.strip() for x in candidates_list if len(x.strip().split(" ")) == 1]
                 print(candidates_list)
             else:
                 print("synonym source is invalid")
+                return []
 
             for lemma in candidates_list:
 
