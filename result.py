@@ -76,7 +76,7 @@ class Results(object):
             c=0
             exception_count = 0
             for row in tqdm(reader):
-                if c < 1000:
+                if c < 1:
                     c += 1
                     try:
                         doc_id, title, text = row
@@ -164,18 +164,23 @@ if __name__ == '__main__':
     queries_path = "sampled_wiki.queries"
     rel_path = "simple_english/en2simple.rel"
     result_dict = {}
+    #(1.2, 0.75), (1.3, 0.75), (1.2, 0.8), (1.1, 0.7)
+    #, "BM25"
+    #, "thesaurus"
+    # "wordnet"
     try:
-        for source in ["None", "wordnet", "thesaurus"]:
-            for similarity in ["TFIDF", "BM25"]:
+        for source in ["None", ]:
+            for similarity in ["TFIDF"]:
                 if similarity == "BM25":
-                    for tpl in [(1.2, 0.75), (1.8, 0.75), (1.2, 0.9)]:
+                    for tpl in [(1.2, 0.75)]:
                         result = Results(rel_path, queries_path, source, similarity, k1=tpl[0], b=tpl[1])
-                        result_dict[(source, similarity, tpl)] = result
+                        result_dict[str(source)+"_"+str(similarity)+"_"+str(tpl)] = result
                 else:
                     result = Results(rel_path, queries_path, source, similarity)
-                    result_dict[(source, similarity)] = result
-        with open("result.json", "w") as outfile:
-            json.dump(result, outfile)
+                    result_dict[str(source)+"_"+str(similarity)] = result
+        print("result_dict", result_dict)
+        with open("result.json", "w", encoding="utf-8") as outfile:
+            json.dump(result_dict, outfile)
         end = datetime.now()
         print(end - start)
     except Exception as e:
