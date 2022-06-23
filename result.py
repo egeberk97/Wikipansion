@@ -42,6 +42,9 @@ class Results(object):
             print("Error similarity funciton")
             exit()
         #
+        self.MAP=0
+        self.NDCG=0
+
         self.query_rel(rel_path, queries_path, searcher)
 
         # for query in queries:
@@ -103,8 +106,13 @@ class Results(object):
             print()
 
             print("NDCG@10 : ", (sum(ndcgs)/len(ndcgs)))
+        self.MAP = round((sum(precisions)/len(precisions)),2)
+        self.NDCG = round((sum(ndcgs)/len(ndcgs)),2)
 
-        return {"MAP" : (sum(precisions)/len(precisions)), "NDCG" : (sum(ndcgs)/len(ndcgs))}
+        return
+
+    def get_results(self):
+        return {"MAP":  self.MAP , "NDCG@10" : self.NDCG }
 
     def ndcg10(self, relevancy_dict, retrieved10):
 
@@ -173,10 +181,10 @@ if __name__ == '__main__':
             for similarity in ["TFIDF"]:
                 if similarity == "BM25":
                     for tpl in [(1.2, 0.75)]:
-                        result = Results(rel_path, queries_path, source, similarity, k1=tpl[0], b=tpl[1])
+                        result = Results(rel_path, queries_path, source, similarity, k1=tpl[0], b=tpl[1]).get_results()
                         result_dict[str(source)+"_"+str(similarity)+"_"+str(tpl)] = result
                 else:
-                    result = Results(rel_path, queries_path, source, similarity)
+                    result = Results(rel_path, queries_path, source, similarity).get_results()
                     result_dict[str(source)+"_"+str(similarity)] = result
         print("result_dict", result_dict)
         with open("result.json", "w", encoding="utf-8") as outfile:
