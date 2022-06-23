@@ -2,6 +2,7 @@ import lucene
 import os, threading, time, csv
 from datetime import datetime
 import re
+import json
 
 import numpy as np
 from sklearn.metrics import ndcg_score
@@ -20,23 +21,27 @@ from synonym import Synonym
 
 class Results(object):
 
-    def __init__(self, rel_path ,queries_path):
+    def __init__(self, rel_path ,queries_path, expansion, similarity_function, k1 = 1.2, b = 0.75):
         storeDir = "index"
 
         store = NIOFSDirectory(Paths.get(storeDir))
 
         reader = DirectoryReader.open(store)
         searcher = IndexSearcher(reader)
-        # print(searcher.getSimilarity() )
-        # searcher.setSimilarity(ClassicSimilarity())
-        # print(searcher.getSimilarity() )
-        # for query in queries:
-        #     self.search(searcher, query)
+        self.expansion_model = Synonym(expansion)
+        self.similarity_function = similarity_function
+
+        if similarity_function == "TFIDF":
+            searcher.setSimilarity(ClassicSimilarity())
+            print(searcher.getSimilarity())
+        elif similarity_function == "BM25":
+            bm25 = BM25Similarity(k1, b)
+            searcher.setSimilarity(bm25)
+            print(searcher.getSimilarity())
+        else:
+            print("Error similarity funciton")
+            exit()
         #
-        # bm25 = BM25Similarity(1.9, 0.5)
-        # searcher.setSimilarity(bm25)
-        # print(searcher.getSimilarity())
-        #self.expansion_model = Synonym("wordnet")
         self.query_rel(rel_path, queries_path, searcher)
 
         # for query in queries:
@@ -78,9 +83,9 @@ class Results(object):
                         relevancy_dict = relevant_set[doc_id]
                         que = str(title).lower()
 
-                        #expand = self.get_synonym(re.sub(r'[^\w\s]', '', que))
-                        #query = str(title).lower() + " " + "".join([i+" " for i in expand])
-                        query = str(title).lower()
+                        expand = self.expansion_model.synonym_antonym_extractor(re.sub(r'[^\w\s]', '', que))
+                        query = str(title).lower() + " " + "".join([i+" " for i in expand])
+                        #query = str(title).lower()
 
                         retrieved10 = self.search(searcher, query)
                         prec = self.average_precision(relevancy_dict, retrieved10)
@@ -99,7 +104,7 @@ class Results(object):
 
             print("NDCG@10 : ", (sum(ndcgs)/len(ndcgs)))
 
-        return
+        return {"MAP" : (sum(precisions)/len(precisions)), "NDCG" : (sum(ndcgs)/len(ndcgs))}
 
     def ndcg10(self, relevancy_dict, retrieved10):
 
@@ -158,8 +163,19 @@ if __name__ == '__main__':
     #queries_path = "english/wiki_en.queries"
     queries_path = "sampled_wiki.queries"
     rel_path = "simple_english/en2simple.rel"
+    result_dict = {}
     try:
-        result = Results(rel_path, queries_path)
+        for source in ["None", "wordnet", "thesaurus"]:
+            for similarity in ["TFIDF", "BM25"]:
+                if similarity == "BM25":
+                    for tpl in [(1.2, 0.75), (1.8, 0.75), (1.2, 0.9)]:
+                        result = Results(rel_path, queries_path, source, similarity, k1=tpl[0], b=tpl[1])
+                        result_dict[(source, similarity, tpl)] = result
+                else:
+                    result = Results(rel_path, queries_path, source, similarity)
+                    result_dict[(source, similarity)] = result
+        with open("result.json", "w") as outfile:
+            json.dump(result, outfile)
         end = datetime.now()
         print(end - start)
     except Exception as e:

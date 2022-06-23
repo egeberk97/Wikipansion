@@ -141,11 +141,11 @@ class Synonym():
                 candidates_list = set(self.flatten([[lemma.name().lower() for lemma in candidates.lemmas()] for candidates in (wordnet.synsets(phrase))]))
             elif self.source.lower() == "thesaurus":
                 candidates_list = set(self.get_synonym_from_thesaurus(phrase))
-                print(candidates_list)
+                #print(candidates_list)
                 candidates_list = [x.strip() for x in candidates_list if len(x.strip().split(" ")) == 1]
-                print(candidates_list)
+                #print(candidates_list)
             else:
-                print("synonym source is invalid")
+                #print("synonym source is invalid")
                 return []
 
             for lemma in candidates_list:
