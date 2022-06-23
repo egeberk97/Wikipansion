@@ -79,7 +79,7 @@ class Results(object):
             c=0
             exception_count = 0
             for row in tqdm(reader):
-                if c < 1:
+                if c < 1000:
                     c += 1
                     try:
                         doc_id, title, text = row
