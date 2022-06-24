@@ -1,6 +1,6 @@
 import tkinter
 from tkinter import *
-from tkinter import ttk
+from datetime import datetime
 
 from search import Search
 from query_refiner import SpellCorrector
@@ -48,7 +48,7 @@ class MyApp:
         # result output
         self.output_container = Frame(parent)
         self.output_container.grid(row=1, column=0, columnspan=3, padx=4, pady=4,sticky=W)
-        self.output_detail = Text(self.output_container, wrap="word", height=38,
+        self.output_detail = Text(self.output_container, wrap="word", height=40,
                            width=120,
                            foreground="black",
                            bg="white")
@@ -91,7 +91,12 @@ class MyApp:
         if textin == "":
             self.output_detail.insert(END, "Query can not be empty")
         else:
+            start_time = datetime.now()
             self.searchEngine(textin)
+            end_time = datetime.now()
+            delta_time = end_time-start_time
+            msec = delta_time.seconds * 1000 + delta_time.microseconds / 1000
+            self.output_detail.insert("1.0", "Top 5 articles are retrieved in {:.3f}".format(msec) + " milliseconds\n")
         #self.myParent.destroy()
 
     def get_synonym(self, query):
@@ -101,7 +106,7 @@ class MyApp:
 
 
     def searchEngine(self, query):
-
+        self.output_detail.tag_configure("bold", font="Helvetica 12 bold")
         self.log_detail.insert(END, "Original Query: " + str(query) + "\n")
         corrected_query = self.wikipansion(query)
 
@@ -111,9 +116,9 @@ class MyApp:
         expand = self.get_synonym(corrected_query)
         expanded_q = "".join([i + ", " for i in expand])
         self.output_detail.insert(END, "\n")
-        self.output_detail.insert(END, "The query expansions : " + expanded_q)
+        #self.output_detail.insert(END, "The query expansions : " + expanded_q)
         self.log_detail.insert(END, "Expanded query: " + expanded_q + "\n")
-        self.log_detail.insert(END, "=======================================\n")
+        self.log_detail.insert(END, 70*"=" + "\n")
 
         self.output_detail.insert(END, "\n")
         self.output_detail.insert(END, "\n")
@@ -129,15 +134,15 @@ class MyApp:
         #     print(" ID :" + str(doc.get("ID")))
         #     print(" Text :" + str(doc.get("Context")))
         #     print("----------------------")
-            self.output_detail.insert(END, str(doc.get("Title")))
-            self.output_detail.insert(END, "\n \t " + str(doc.get("Context")))
+            self.output_detail.insert(END, str(doc.get("Title")).upper(), "bold")
+            self.output_detail.insert(END, "\n   " + str(doc.get("Context")))
             self.output_detail.insert(END, "\n")
             self.output_detail.insert(END, "\n")
-            self.output_detail.insert(END, "\n")
+            self.output_detail.insert(END, 120*"=" + "\n")
 
 
 root = Tk()
-root.geometry("1050x750")
+root.geometry("1050x800")
 root.config(background="#B4B4B4")
 myapp = MyApp(root, "thesaurus")
 root.title('Search')

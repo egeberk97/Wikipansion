@@ -135,7 +135,7 @@ class Synonym():
         for phrase in query.split():
             lst = []
             if pos_tag[word.index(phrase)] not in pos_filter:
-                #print(phrase, " is filtered - pos tag ", pos_tag[word.index(phrase)])
+                print(phrase, " will be ignored. pos tag: ", pos_tag[word.index(phrase)])
                 continue
             if self.source.lower() == "wordnet":
                 candidates_list = set(self.flatten([[lemma.name().lower() for lemma in candidates.lemmas()] for candidates in (wordnet.synsets(phrase))]))
@@ -143,7 +143,7 @@ class Synonym():
                 candidates_list = set(self.get_synonym_from_thesaurus(phrase))
                 #print(candidates_list)
                 candidates_list = [x.strip() for x in candidates_list if len(x.strip().split(" ")) == 1]
-                #print(candidates_list)
+                print("candidates list: ", candidates_list)
             else:
                 #print("synonym source is invalid")
                 return []
@@ -167,4 +167,5 @@ class Synonym():
 
             synonyms.extend([i[0] for i in lst])
                 #synonyms.append(lemma.name())
+            print("Selected synonyms: ", synonyms)
         return synonyms
