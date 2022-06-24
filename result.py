@@ -172,10 +172,7 @@ if __name__ == '__main__':
     queries_path = "sampled_wiki.queries"
     rel_path = "simple_english/en2simple.rel"
     result_dict = {}
-    #(1.2, 0.75), (1.3, 0.75), (1.2, 0.8), (1.1, 0.7)
-    #, "BM25"
-    #, "thesaurus"
-    # "wordnet"
+
     try:
         for source in ["None", "wordnet", "thesaurus"]:
             for similarity in ["TFIDF", "BM25"]:
